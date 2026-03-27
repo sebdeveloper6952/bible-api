@@ -4,7 +4,7 @@ WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags='-s -w' -o /api ./cmd/api
+RUN CGO_ENABLED=1 GOOS=linux go build -ldflags='-s -w' -o /api ./cmd/api
 
 # Stage 2: Runtime (distroless includes CA certs for outbound TLS)
 FROM gcr.io/distroless/static-debian12:nonroot
