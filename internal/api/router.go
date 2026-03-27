@@ -53,5 +53,5 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /healthz/ready", s.readiness)
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 
-	return loggingMiddleware(s.log)(mux)
+	return corsMiddleware(loggingMiddleware(s.log)(mux))
 }
