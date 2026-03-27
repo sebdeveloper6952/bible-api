@@ -33,6 +33,7 @@ func main() {
 
 	server := api.NewServer(
 		logger,
+		db,
 		repository.NewVersionRepo(db),
 		repository.NewBookRepo(db),
 		repository.NewChapterRepo(db),

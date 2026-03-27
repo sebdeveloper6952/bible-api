@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"log/slog"
 	"net/http"
 
@@ -9,6 +10,7 @@ import (
 
 type Server struct {
 	log      *slog.Logger
+	db       *sql.DB
 	versions *repository.VersionRepo
 	books    *repository.BookRepo
 	chapters *repository.ChapterRepo
@@ -17,6 +19,7 @@ type Server struct {
 
 func NewServer(
 	logger *slog.Logger,
+	db *sql.DB,
 	versions *repository.VersionRepo,
 	books *repository.BookRepo,
 	chapters *repository.ChapterRepo,
@@ -24,6 +27,7 @@ func NewServer(
 ) *Server {
 	return &Server{
 		log:      logger,
+		db:       db,
 		versions: versions,
 		books:    books,
 		chapters: chapters,
@@ -42,6 +46,9 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /versions/{version}/books/{book}/chapters/{chapter}", s.getChapter)
 	mux.HandleFunc("GET /versions/{version}/books/{book}/chapters/{chapter}/verses", s.listVerses)
 	mux.HandleFunc("GET /versions/{version}/books/{book}/chapters/{chapter}/verses/{verse}", s.getVerse)
+
+	mux.HandleFunc("GET /healthz/live", s.liveness)
+	mux.HandleFunc("GET /healthz/ready", s.readiness)
 
 	return loggingMiddleware(s.log)(mux)
 }
