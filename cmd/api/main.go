@@ -15,7 +15,7 @@ func main() {
 		Level: slog.LevelInfo,
 	}))
 
-	dbPath := "bible.db"
+	dbPath := "/data/bible.db"
 	if len(os.Args) > 1 {
 		dbPath = os.Args[1]
 	}
