@@ -1,12 +1,14 @@
 package api
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/sebdeveloper6952/bible-api/internal/repository"
 )
 
 type Server struct {
+	log      *slog.Logger
 	versions *repository.VersionRepo
 	books    *repository.BookRepo
 	chapters *repository.ChapterRepo
@@ -14,12 +16,14 @@ type Server struct {
 }
 
 func NewServer(
+	logger *slog.Logger,
 	versions *repository.VersionRepo,
 	books *repository.BookRepo,
 	chapters *repository.ChapterRepo,
 	verses *repository.VerseRepo,
 ) *Server {
 	return &Server{
+		log:      logger,
 		versions: versions,
 		books:    books,
 		chapters: chapters,
@@ -39,5 +43,5 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /versions/{version}/books/{book}/chapters/{chapter}/verses", s.listVerses)
 	mux.HandleFunc("GET /versions/{version}/books/{book}/chapters/{chapter}/verses/{verse}", s.getVerse)
 
-	return mux
+	return loggingMiddleware(s.log)(mux)
 }

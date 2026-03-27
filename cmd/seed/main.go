@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"sort"
 	"strconv"
@@ -13,19 +13,19 @@ import (
 )
 
 type bibleJSON struct {
-	Version string               `json:"version"`
-	Books   map[string]bookJSON  `json:"books"`
+	Version string              `json:"version"`
+	Books   map[string]bookJSON `json:"books"`
 }
 
 type bookJSON struct {
-	Name     string                  `json:"name"`
-	Number   int                     `json:"number"`
-	Chapters map[string]chapterJSON  `json:"chapters"`
+	Name     string                 `json:"name"`
+	Number   int                    `json:"number"`
+	Chapters map[string]chapterJSON `json:"chapters"`
 }
 
 type chapterJSON struct {
-	Number int                   `json:"number"`
-	Verses map[string]verseJSON  `json:"verses"`
+	Number int                  `json:"number"`
+	Verses map[string]verseJSON `json:"verses"`
 }
 
 type verseJSON struct {
@@ -34,39 +34,51 @@ type verseJSON struct {
 }
 
 func main() {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+
 	dbPath := "bible.db"
 	if len(os.Args) > 1 {
 		dbPath = os.Args[1]
 	}
-	jsonPath := "bible.json"
+	jsonPath := "input/bible.json"
 	if len(os.Args) > 2 {
 		jsonPath = os.Args[2]
 	}
 
+	logger.Info("opening database", slog.String("path", dbPath))
 	db, err := bibledb.Open(dbPath)
 	if err != nil {
-		log.Fatalf("open db: %v", err)
+		logger.Error("open db", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 	defer db.Close()
 
+	logger.Info("loading bible data", slog.String("path", jsonPath))
 	f, err := os.Open(jsonPath)
 	if err != nil {
-		log.Fatalf("open json: %v", err)
+		logger.Error("open json", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 	defer f.Close()
 
 	var bible bibleJSON
 	if err := json.NewDecoder(f).Decode(&bible); err != nil {
-		log.Fatalf("decode json: %v", err)
+		logger.Error("decode json", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
+	logger.Info("bible data loaded",
+		slog.String("version", bible.Version),
+		slog.Int("books", len(bible.Books)),
+	)
 
-	if err := seed(db, bible); err != nil {
-		log.Fatalf("seed: %v", err)
+	if err := seed(db, bible, logger); err != nil {
+		logger.Error("seed failed", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
-	fmt.Println("Seeding complete.")
+	logger.Info("seeding complete")
 }
 
-func seed(db *sql.DB, bible bibleJSON) error {
+func seed(db *sql.DB, bible bibleJSON, logger *slog.Logger) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return err
@@ -74,6 +86,7 @@ func seed(db *sql.DB, bible bibleJSON) error {
 	defer tx.Rollback()
 
 	// Insert version (idempotent)
+	logger.Info("inserting version", slog.String("version", bible.Version))
 	res, err := tx.Exec(
 		`INSERT OR IGNORE INTO bible_versions (slug, name, language) VALUES (?, ?, ?)`,
 		"rvr1960", bible.Version, "es",
@@ -103,6 +116,11 @@ func seed(db *sql.DB, bible bibleJSON) error {
 
 	for _, bk := range bookKeys {
 		book := bible.Books[bk]
+		logger.Info("seeding book",
+			slog.Int("number", book.Number),
+			slog.String("name", book.Name),
+			slog.Int("chapters", len(book.Chapters)),
+		)
 		res, err := tx.Exec(
 			`INSERT OR IGNORE INTO books (version_id, number, name) VALUES (?, ?, ?)`,
 			versionID, book.Number, book.Name,
@@ -170,5 +188,6 @@ func seed(db *sql.DB, bible bibleJSON) error {
 		}
 	}
 
+	logger.Info("committing transaction")
 	return tx.Commit()
 }

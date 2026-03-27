@@ -2,18 +2,29 @@ package api
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/sebdeveloper6952/bible-api/internal/repository"
 )
 
+// internalError logs the error server-side and returns a generic 500 to the client.
+func (s *Server) internalError(w http.ResponseWriter, r *http.Request, err error) {
+	s.log.Error("handler error",
+		slog.String("method", r.Method),
+		slog.String("path", r.URL.Path),
+		slog.String("error", err.Error()),
+	)
+	WriteError(w, http.StatusInternalServerError, "internal error")
+}
+
 // --- Version handlers ---
 
 func (s *Server) listVersions(w http.ResponseWriter, r *http.Request) {
 	versions, err := s.versions.List()
 	if err != nil {
-		WriteError(w, http.StatusInternalServerError, "internal error")
+		s.internalError(w, r, err)
 		return
 	}
 	WriteJSON(w, http.StatusOK, versions)
@@ -27,7 +38,7 @@ func (s *Server) getVersion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		WriteError(w, http.StatusInternalServerError, "internal error")
+		s.internalError(w, r, err)
 		return
 	}
 	WriteJSON(w, http.StatusOK, v)
@@ -39,7 +50,7 @@ func (s *Server) listBooks(w http.ResponseWriter, r *http.Request) {
 	version := r.PathValue("version")
 	books, err := s.books.ListByVersion(version)
 	if err != nil {
-		WriteError(w, http.StatusInternalServerError, "internal error")
+		s.internalError(w, r, err)
 		return
 	}
 	WriteJSON(w, http.StatusOK, books)
@@ -58,7 +69,7 @@ func (s *Server) getBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		WriteError(w, http.StatusInternalServerError, "internal error")
+		s.internalError(w, r, err)
 		return
 	}
 	WriteJSON(w, http.StatusOK, book)
@@ -75,7 +86,7 @@ func (s *Server) listChapters(w http.ResponseWriter, r *http.Request) {
 	}
 	chapters, err := s.chapters.ListByBook(version, bookNum)
 	if err != nil {
-		WriteError(w, http.StatusInternalServerError, "internal error")
+		s.internalError(w, r, err)
 		return
 	}
 	WriteJSON(w, http.StatusOK, chapters)
@@ -99,7 +110,7 @@ func (s *Server) getChapter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		WriteError(w, http.StatusInternalServerError, "internal error")
+		s.internalError(w, r, err)
 		return
 	}
 	WriteJSON(w, http.StatusOK, chapter)
@@ -121,7 +132,7 @@ func (s *Server) listVerses(w http.ResponseWriter, r *http.Request) {
 	}
 	verses, err := s.verses.ListByChapter(version, bookNum, chapterNum)
 	if err != nil {
-		WriteError(w, http.StatusInternalServerError, "internal error")
+		s.internalError(w, r, err)
 		return
 	}
 	WriteJSON(w, http.StatusOK, verses)
@@ -150,7 +161,7 @@ func (s *Server) getVerse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		WriteError(w, http.StatusInternalServerError, "internal error")
+		s.internalError(w, r, err)
 		return
 	}
 	WriteJSON(w, http.StatusOK, verse)

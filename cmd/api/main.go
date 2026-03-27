@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -11,6 +11,10 @@ import (
 )
 
 func main() {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
+
 	dbPath := "bible.db"
 	if len(os.Args) > 1 {
 		dbPath = os.Args[1]
@@ -22,19 +26,22 @@ func main() {
 
 	db, err := bibledb.Open(dbPath)
 	if err != nil {
-		log.Fatalf("open db: %v", err)
+		logger.Error("open db", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 	defer db.Close()
 
 	server := api.NewServer(
+		logger,
 		repository.NewVersionRepo(db),
 		repository.NewBookRepo(db),
 		repository.NewChapterRepo(db),
 		repository.NewVerseRepo(db),
 	)
 
-	log.Printf("listening on %s", addr)
+	logger.Info("listening", slog.String("addr", addr))
 	if err := http.ListenAndServe(addr, server.Handler()); err != nil {
-		log.Fatalf("server: %v", err)
+		logger.Error("server", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 }
