@@ -1,0 +1,46 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Build output
+/bin/
+/dist/
+
+# Test binary
+*.test
+
+# Coverage
+*.out
+coverage.html
+
+# Dependency vendor directory
+vendor/
+
+# Go workspace
+go.work
+go.work.sum
+
+# Environment
+.env
+.env.*
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Input data
+input/
