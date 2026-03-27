@@ -1,14 +1,11 @@
-# Stage 1: Build Go binary
-FROM golang:1.26-alpine AS builder
-WORKDIR /src
-COPY go.mod go.sum ./
-RUN go mod download
+FROM dhi.io/golang:1.26-dev AS builder
+WORKDIR /go/src/app
 COPY . .
-RUN CGO_ENABLED=1 GOOS=linux go build -ldflags='-s -w' -o /api ./cmd/api
+RUN mkdir ./bin && CGO_ENABLED=1 go build \
+    -ldflags "-linkmode external -extldflags '-static'" \
+    -o ./bin/api ./cmd/api/main.go
 
-# Stage 2: Runtime (distroless includes CA certs for outbound TLS)
-FROM gcr.io/distroless/static-debian12:nonroot
-COPY --from=builder /api /api
-EXPOSE 8080
-ENTRYPOINT ["/api"]
-CMD ["serve"]
+FROM dhi.io/static:20250419
+COPY --from=builder /go/src/app/bin/api /api
+EXPOSE 8080/tcp
+CMD ["/api"]
