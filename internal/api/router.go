@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 
+	httpSwagger "github.com/swaggo/http-swagger"
+
 	"github.com/sebdeveloper6952/bible-api/internal/repository"
 )
 
@@ -49,6 +51,7 @@ func (s *Server) Handler() http.Handler {
 
 	mux.HandleFunc("GET /healthz/live", s.liveness)
 	mux.HandleFunc("GET /healthz/ready", s.readiness)
+	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 
 	return loggingMiddleware(s.log)(mux)
 }

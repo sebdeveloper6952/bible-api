@@ -1,0 +1,399 @@
+basePath: /
+definitions:
+  api.bookListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Book'
+        type: array
+    type: object
+  api.bookResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Book'
+    type: object
+  api.chapterListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Chapter'
+        type: array
+    type: object
+  api.chapterResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Chapter'
+    type: object
+  api.errorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  api.healthResponse:
+    properties:
+      data:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  api.verseListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Verse'
+        type: array
+    type: object
+  api.verseResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Verse'
+    type: object
+  api.versionListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Version'
+        type: array
+    type: object
+  api.versionResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Version'
+    type: object
+  models.Book:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      number:
+        type: integer
+    type: object
+  models.Chapter:
+    properties:
+      id:
+        type: integer
+      number:
+        type: integer
+      verses:
+        items:
+          $ref: '#/definitions/models.Verse'
+        type: array
+    type: object
+  models.Verse:
+    properties:
+      content:
+        type: string
+      id:
+        type: integer
+      number:
+        type: integer
+    type: object
+  models.Version:
+    properties:
+      id:
+        type: integer
+      language:
+        type: string
+      name:
+        type: string
+      slug:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: REST API to serve Bible content in multiple versions and languages.
+  title: Bible API
+  version: "1.0"
+paths:
+  /healthz/live:
+    get:
+      description: Returns 200 if the process is running.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.healthResponse'
+      summary: Liveness probe
+      tags:
+      - health
+  /healthz/ready:
+    get:
+      description: Returns 200 if the database is reachable, 503 otherwise.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.healthResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Readiness probe
+      tags:
+      - health
+  /versions:
+    get:
+      description: Returns all available Bible versions.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.versionListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: List Bible versions
+      tags:
+      - versions
+  /versions/{version}:
+    get:
+      description: Returns a single Bible version by its slug.
+      parameters:
+      - description: Version slug (e.g. rvr1960)
+        in: path
+        name: version
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.versionResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Get a Bible version
+      tags:
+      - versions
+  /versions/{version}/books:
+    get:
+      description: Returns all books for a given Bible version.
+      parameters:
+      - description: Version slug (e.g. rvr1960)
+        in: path
+        name: version
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.bookListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: List books
+      tags:
+      - books
+  /versions/{version}/books/{book}:
+    get:
+      description: Returns a single book by its number within a Bible version.
+      parameters:
+      - description: Version slug (e.g. rvr1960)
+        in: path
+        name: version
+        required: true
+        type: string
+      - description: Book number (1–66)
+        in: path
+        name: book
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.bookResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Get a book
+      tags:
+      - books
+  /versions/{version}/books/{book}/chapters:
+    get:
+      description: Returns all chapters for a given book and Bible version.
+      parameters:
+      - description: Version slug (e.g. rvr1960)
+        in: path
+        name: version
+        required: true
+        type: string
+      - description: Book number (1–66)
+        in: path
+        name: book
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.chapterListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: List chapters
+      tags:
+      - chapters
+  /versions/{version}/books/{book}/chapters/{chapter}:
+    get:
+      description: Returns a chapter with all its verses.
+      parameters:
+      - description: Version slug (e.g. rvr1960)
+        in: path
+        name: version
+        required: true
+        type: string
+      - description: Book number (1–66)
+        in: path
+        name: book
+        required: true
+        type: integer
+      - description: Chapter number
+        in: path
+        name: chapter
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.chapterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Get a chapter
+      tags:
+      - chapters
+  /versions/{version}/books/{book}/chapters/{chapter}/verses:
+    get:
+      description: Returns all verses for a given chapter.
+      parameters:
+      - description: Version slug (e.g. rvr1960)
+        in: path
+        name: version
+        required: true
+        type: string
+      - description: Book number (1–66)
+        in: path
+        name: book
+        required: true
+        type: integer
+      - description: Chapter number
+        in: path
+        name: chapter
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.verseListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: List verses
+      tags:
+      - verses
+  /versions/{version}/books/{book}/chapters/{chapter}/verses/{verse}:
+    get:
+      description: Returns a single verse by its number.
+      parameters:
+      - description: Version slug (e.g. rvr1960)
+        in: path
+        name: version
+        required: true
+        type: string
+      - description: Book number (1–66)
+        in: path
+        name: book
+        required: true
+        type: integer
+      - description: Chapter number
+        in: path
+        name: chapter
+        required: true
+        type: integer
+      - description: Verse number
+        in: path
+        name: verse
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.verseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      summary: Get a verse
+      tags:
+      - verses
+swagger: "2.0"

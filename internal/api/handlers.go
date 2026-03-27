@@ -21,6 +21,13 @@ func (s *Server) internalError(w http.ResponseWriter, r *http.Request, err error
 
 // --- Version handlers ---
 
+// @Summary      List Bible versions
+// @Description  Returns all available Bible versions.
+// @Tags         versions
+// @Produce      json
+// @Success      200  {object}  versionListResponse
+// @Failure      500  {object}  errorResponse
+// @Router       /versions [get]
 func (s *Server) listVersions(w http.ResponseWriter, r *http.Request) {
 	versions, err := s.versions.List()
 	if err != nil {
@@ -30,6 +37,15 @@ func (s *Server) listVersions(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, versions)
 }
 
+// @Summary      Get a Bible version
+// @Description  Returns a single Bible version by its slug.
+// @Tags         versions
+// @Produce      json
+// @Param        version  path      string  true  "Version slug (e.g. rvr1960)"
+// @Success      200      {object}  versionResponse
+// @Failure      404      {object}  errorResponse
+// @Failure      500      {object}  errorResponse
+// @Router       /versions/{version} [get]
 func (s *Server) getVersion(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("version")
 	v, err := s.versions.GetBySlug(slug)
@@ -46,6 +62,14 @@ func (s *Server) getVersion(w http.ResponseWriter, r *http.Request) {
 
 // --- Book handlers ---
 
+// @Summary      List books
+// @Description  Returns all books for a given Bible version.
+// @Tags         books
+// @Produce      json
+// @Param        version  path      string  true  "Version slug (e.g. rvr1960)"
+// @Success      200      {object}  bookListResponse
+// @Failure      500      {object}  errorResponse
+// @Router       /versions/{version}/books [get]
 func (s *Server) listBooks(w http.ResponseWriter, r *http.Request) {
 	version := r.PathValue("version")
 	books, err := s.books.ListByVersion(version)
@@ -56,6 +80,17 @@ func (s *Server) listBooks(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, books)
 }
 
+// @Summary      Get a book
+// @Description  Returns a single book by its number within a Bible version.
+// @Tags         books
+// @Produce      json
+// @Param        version  path      string  true  "Version slug (e.g. rvr1960)"
+// @Param        book     path      int     true  "Book number (1–66)"
+// @Success      200      {object}  bookResponse
+// @Failure      400      {object}  errorResponse
+// @Failure      404      {object}  errorResponse
+// @Failure      500      {object}  errorResponse
+// @Router       /versions/{version}/books/{book} [get]
 func (s *Server) getBook(w http.ResponseWriter, r *http.Request) {
 	version := r.PathValue("version")
 	bookNum, err := strconv.Atoi(r.PathValue("book"))
@@ -77,6 +112,16 @@ func (s *Server) getBook(w http.ResponseWriter, r *http.Request) {
 
 // --- Chapter handlers ---
 
+// @Summary      List chapters
+// @Description  Returns all chapters for a given book and Bible version.
+// @Tags         chapters
+// @Produce      json
+// @Param        version  path      string  true  "Version slug (e.g. rvr1960)"
+// @Param        book     path      int     true  "Book number (1–66)"
+// @Success      200      {object}  chapterListResponse
+// @Failure      400      {object}  errorResponse
+// @Failure      500      {object}  errorResponse
+// @Router       /versions/{version}/books/{book}/chapters [get]
 func (s *Server) listChapters(w http.ResponseWriter, r *http.Request) {
 	version := r.PathValue("version")
 	bookNum, err := strconv.Atoi(r.PathValue("book"))
@@ -92,6 +137,18 @@ func (s *Server) listChapters(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, chapters)
 }
 
+// @Summary      Get a chapter
+// @Description  Returns a chapter with all its verses.
+// @Tags         chapters
+// @Produce      json
+// @Param        version  path      string  true  "Version slug (e.g. rvr1960)"
+// @Param        book     path      int     true  "Book number (1–66)"
+// @Param        chapter  path      int     true  "Chapter number"
+// @Success      200      {object}  chapterResponse
+// @Failure      400      {object}  errorResponse
+// @Failure      404      {object}  errorResponse
+// @Failure      500      {object}  errorResponse
+// @Router       /versions/{version}/books/{book}/chapters/{chapter} [get]
 func (s *Server) getChapter(w http.ResponseWriter, r *http.Request) {
 	version := r.PathValue("version")
 	bookNum, err := strconv.Atoi(r.PathValue("book"))
@@ -118,6 +175,17 @@ func (s *Server) getChapter(w http.ResponseWriter, r *http.Request) {
 
 // --- Verse handlers ---
 
+// @Summary      List verses
+// @Description  Returns all verses for a given chapter.
+// @Tags         verses
+// @Produce      json
+// @Param        version  path      string  true  "Version slug (e.g. rvr1960)"
+// @Param        book     path      int     true  "Book number (1–66)"
+// @Param        chapter  path      int     true  "Chapter number"
+// @Success      200      {object}  verseListResponse
+// @Failure      400      {object}  errorResponse
+// @Failure      500      {object}  errorResponse
+// @Router       /versions/{version}/books/{book}/chapters/{chapter}/verses [get]
 func (s *Server) listVerses(w http.ResponseWriter, r *http.Request) {
 	version := r.PathValue("version")
 	bookNum, err := strconv.Atoi(r.PathValue("book"))
@@ -138,6 +206,19 @@ func (s *Server) listVerses(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, verses)
 }
 
+// @Summary      Get a verse
+// @Description  Returns a single verse by its number.
+// @Tags         verses
+// @Produce      json
+// @Param        version  path      string  true  "Version slug (e.g. rvr1960)"
+// @Param        book     path      int     true  "Book number (1–66)"
+// @Param        chapter  path      int     true  "Chapter number"
+// @Param        verse    path      int     true  "Verse number"
+// @Success      200      {object}  verseResponse
+// @Failure      400      {object}  errorResponse
+// @Failure      404      {object}  errorResponse
+// @Failure      500      {object}  errorResponse
+// @Router       /versions/{version}/books/{book}/chapters/{chapter}/verses/{verse} [get]
 func (s *Server) getVerse(w http.ResponseWriter, r *http.Request) {
 	version := r.PathValue("version")
 	bookNum, err := strconv.Atoi(r.PathValue("book"))

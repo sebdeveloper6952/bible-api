@@ -5,11 +5,17 @@ import (
 	"net/http"
 	"os"
 
+	_ "github.com/sebdeveloper6952/bible-api/docs"
 	"github.com/sebdeveloper6952/bible-api/internal/api"
 	bibledb "github.com/sebdeveloper6952/bible-api/internal/db"
 	"github.com/sebdeveloper6952/bible-api/internal/repository"
 )
 
+// @title          Bible API
+// @version        1.0
+// @description    REST API to serve Bible content in multiple versions and languages.
+// @host           localhost:8080
+// @BasePath       /
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
