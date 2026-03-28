@@ -36,7 +36,7 @@ type verseJSON struct {
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 
-	dbPath := "bible.db"
+	dbPath := "data/bible.db"
 	if len(os.Args) > 1 {
 		dbPath = os.Args[1]
 	}

@@ -44,7 +44,8 @@ func isAllowedOrigin(origin string) bool {
 		return false
 	}
 	host := u.Host
-	return host == "sebdev.io" || strings.HasSuffix(host, ".sebdev.io")
+	hostname := strings.Split(host, ":")[0]
+	return hostname == "sebdev.io" || strings.HasSuffix(hostname, ".sebdev.io") || hostname == "localhost" || hostname == "127.0.0.1"
 }
 
 func loggingMiddleware(logger *slog.Logger) func(http.Handler) http.Handler {
