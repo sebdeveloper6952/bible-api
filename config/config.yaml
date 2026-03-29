@@ -1,0 +1,10 @@
+server:
+  addr: ":8080"
+  db_path: "/data/bible.db"
+
+cors:
+  allowed_origins:
+    - "sebdev.io"
+    - "*.sebdev.io"
+    - "localhost"
+    - "127.0.0.1"

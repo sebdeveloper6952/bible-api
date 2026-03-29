@@ -7,11 +7,13 @@ import (
 
 	httpSwagger "github.com/swaggo/http-swagger"
 
+	"github.com/sebdeveloper6952/bible-api/internal/config"
 	"github.com/sebdeveloper6952/bible-api/internal/repository"
 )
 
 type Server struct {
 	log      *slog.Logger
+	cfg      *config.Config
 	db       *sql.DB
 	versions *repository.VersionRepo
 	books    *repository.BookRepo
@@ -21,6 +23,7 @@ type Server struct {
 
 func NewServer(
 	logger *slog.Logger,
+	cfg *config.Config,
 	db *sql.DB,
 	versions *repository.VersionRepo,
 	books *repository.BookRepo,
@@ -29,6 +32,7 @@ func NewServer(
 ) *Server {
 	return &Server{
 		log:      logger,
+		cfg:      cfg,
 		db:       db,
 		versions: versions,
 		books:    books,
@@ -53,5 +57,5 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /healthz/ready", s.readiness)
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 
-	return corsMiddleware(loggingMiddleware(s.log)(mux))
+	return corsMiddleware(&s.cfg.CORS)(loggingMiddleware(s.log)(mux))
 }

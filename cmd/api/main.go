@@ -7,6 +7,7 @@ import (
 
 	_ "github.com/sebdeveloper6952/bible-api/docs"
 	"github.com/sebdeveloper6952/bible-api/internal/api"
+	"github.com/sebdeveloper6952/bible-api/internal/config"
 	bibledb "github.com/sebdeveloper6952/bible-api/internal/db"
 	"github.com/sebdeveloper6952/bible-api/internal/repository"
 )
@@ -21,16 +22,18 @@ func main() {
 		Level: slog.LevelInfo,
 	}))
 
-	dbPath := "/data/bible.db"
+	cfgPath := "config/config.yaml"
 	if len(os.Args) > 1 {
-		dbPath = os.Args[1]
-	}
-	addr := ":8080"
-	if len(os.Args) > 2 {
-		addr = os.Args[2]
+		cfgPath = os.Args[1]
 	}
 
-	db, err := bibledb.Open(dbPath)
+	cfg, err := config.Load(cfgPath)
+	if err != nil {
+		logger.Error("load config", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
+	db, err := bibledb.Open(cfg.Server.DBPath)
 	if err != nil {
 		logger.Error("open db", slog.String("error", err.Error()))
 		os.Exit(1)
@@ -39,6 +42,7 @@ func main() {
 
 	server := api.NewServer(
 		logger,
+		cfg,
 		db,
 		repository.NewVersionRepo(db),
 		repository.NewBookRepo(db),
@@ -46,8 +50,8 @@ func main() {
 		repository.NewVerseRepo(db),
 	)
 
-	logger.Info("listening", slog.String("addr", addr))
-	if err := http.ListenAndServe(addr, server.Handler()); err != nil {
+	logger.Info("listening", slog.String("addr", cfg.Server.Addr))
+	if err := http.ListenAndServe(cfg.Server.Addr, server.Handler()); err != nil {
 		logger.Error("server", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
